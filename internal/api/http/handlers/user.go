@@ -53,3 +53,34 @@ func SignupHandle(w http.ResponseWriter, r *http.Request) {
 
 	util.SendJSONResponse(w, http.StatusOK, true, "User Registered Successfully", nil)
 }
+
+func LoginHandle(w http.ResponseWriter, r *http.Request) {
+	var user models.User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		util.SendJSONResponse(w, http.StatusBadRequest, false, "Invalid request payload", nil)
+		return
+	}
+
+	if user.Email == "" || user.Password == "" {
+		util.SendJSONResponse(w, http.StatusBadRequest, false, "Email/Username and password are required", nil)
+		return
+	}
+
+	var storedUser models.User
+	query := `SELECT id, username, email, password, "phoneNumber" FROM users WHERE email=$1 OR username=$1`
+	err := config.DB.QueryRow(query, user.Email).Scan(&storedUser.ID, &storedUser.Username, &storedUser.Email, &storedUser.Password, &storedUser.Phonenumber)
+
+	if err != nil {
+		util.SendJSONResponse(w, http.StatusNotFound, false, "Invalid email/username or password", nil)
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password)); err != nil {
+		util.SendJSONResponse(w, http.StatusNotFound, false, "Invalid email/username or password", nil)
+		return
+	}
+
+	storedUser.Password = ""
+
+	util.SendJSONResponse(w, http.StatusOK, true, "Login successful", storedUser)
+}

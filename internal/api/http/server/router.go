@@ -10,7 +10,8 @@ import (
 
 func NewRouter() http.Handler {
 	router := mux.NewRouter()
-	router.HandleFunc("/signup", handlers.SignupHandle)
+	router.HandleFunc("/signup", handlers.SignupHandle).Methods("POST")
+	router.HandleFunc("/login", handlers.LoginHandle).Methods("POST")
 
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:8100"},
