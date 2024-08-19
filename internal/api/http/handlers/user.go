@@ -84,3 +84,32 @@ func LoginHandle(w http.ResponseWriter, r *http.Request) {
 
 	util.SendJSONResponse(w, http.StatusOK, true, "Login successful", storedUser)
 }
+
+func EditProfileHandle(w http.ResponseWriter, r *http.Request) {
+	var user models.User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		util.SendJSONResponse(w, http.StatusBadRequest, false, "Invalid request payload", nil)
+		return
+	}
+
+	if user.ID == 0 {
+		util.SendJSONResponse(w, http.StatusBadRequest, false, "User ID is required", nil)
+		return
+	}
+
+	query := `
+		UPDATE users 
+		SET username = COALESCE(NULLIF($1, ''), username),
+			email = COALESCE(NULLIF($2, ''), email),
+			"phoneNumber" = COALESCE(NULLIF($3, ''), "phoneNumber")
+		WHERE id = $4`
+
+	_, err = config.DB.Exec(query, user.Username, user.Email, user.Phonenumber, user.ID)
+	if err != nil {
+		util.SendJSONResponse(w, http.StatusInternalServerError, false, err.Error(), nil)
+		return
+	}
+
+	util.SendJSONResponse(w, http.StatusOK, true, "Profile updated successfully", nil)
+}
