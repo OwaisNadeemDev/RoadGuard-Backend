@@ -15,10 +15,9 @@ func NewRouter() http.Handler {
 	router.HandleFunc("/editprofile", handlers.EditProfileHandle).Methods("PUT")
 
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:8100"},
+		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{"Content-Type", "Authorization"},
 	}).Handler(router)
-
 	return corsHandler
 }
